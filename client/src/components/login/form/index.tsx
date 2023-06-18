@@ -1,11 +1,44 @@
 import styled from "styled-components";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/router";
+
+import { getCookie, setCookie } from "@/util/cookie";
 
 const Form = () => {
+  const router = useRouter();
+
   const [id, setId] = useState("");
   const [pw, setPw] = useState("");
+
+  function checkInputBox() {
+    if (id === "") {
+      alert("아이디를 입력하세요");
+    } else if (pw === "") {
+      alert("비밀번호를 확인하세요");
+    } else {
+      fetch("http://localhost:8080/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: id,
+          password: pw,
+        }),
+      })
+        .then((res) => res.json())
+        .then((res) => {
+          setCookie("username", res.username);
+          setCookie("token", res.token);
+          location.reload();
+        });
+    }
+  }
+
+  useEffect(() => {
+    if (getCookie("token")) router.push("/main");
+  }, []);
 
   return (
     <Container>
@@ -21,7 +54,7 @@ const Form = () => {
         value={pw}
         onChange={(e) => setPw(e.target.value)}
       />
-      <SubmitBtn>로그인</SubmitBtn>
+      <SubmitBtn onClick={checkInputBox}>로그인</SubmitBtn>
       <SubContents>
         <Link href={"/regist"}>회원가입 하러가기</Link>
       </SubContents>

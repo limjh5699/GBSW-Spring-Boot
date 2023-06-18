@@ -3,13 +3,16 @@ import DatePicker from "react-datepicker";
 
 import styled from "styled-components";
 import "react-datepicker/dist/react-datepicker.css";
+import { getCookie } from "@/util/cookie";
 
 interface propsType {
   setState: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const Modal = ({ setState }: propsType) => {
+  const [title, setTitle] = useState("");
   const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
 
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -27,6 +30,30 @@ const Modal = ({ setState }: propsType) => {
     };
   });
 
+  function onClickHandler() {
+    const startdate = `${startDate.getFullYear()}-${String(
+      startDate.getMonth() + 1
+    ).padStart(2, "0")}-${String(startDate.getDate()).padStart(2, "0")}`;
+
+    const enddate = `${endDate.getFullYear()}-${String(
+      endDate.getMonth() + 1
+    ).padStart(2, "0")}-${String(endDate.getDate()).padStart(2, "0")}`;
+
+    setState(false);
+    fetch("http://localhost:8080/api/createPost", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        writer: getCookie("username"),
+        title: title,
+        s_date: startdate,
+        e_date: enddate,
+      }),
+    }).then(() => location.reload());
+  }
+
   return (
     <Background>
       <Contents ref={modalRef}>
@@ -40,15 +67,21 @@ const Modal = ({ setState }: propsType) => {
         <SecondContent>
           <Span>끝나는 날짜</Span>
           <StyledDatePicker
-            selected={startDate}
-            onChange={(date: Date) => setStartDate(date)}
+            selected={endDate}
+            onChange={(date: Date) => setEndDate(date)}
           />
         </SecondContent>
         <ThirdContent>
           <Span>타이틀</Span>
-          <Input type="text" />
+          <Input
+            type="text"
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value);
+            }}
+          />
         </ThirdContent>
-        <Btn>일정 등록</Btn>
+        <Btn onClick={onClickHandler}>일정 등록</Btn>
       </Contents>
     </Background>
   );
